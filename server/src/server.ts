@@ -4,7 +4,7 @@ const app = express();
 
 app.get("/ads", (request, response) => {
   return response.json({
-    message: "is running",
+    message: "success",
   });
 });
 
