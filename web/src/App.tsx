@@ -41,7 +41,7 @@ export function App() {
         </a>
       </section>
 
-      <section className="pt-1 bg-nlw-gradient self-stretch rounded-lg overflow-hidden">
+      <section className="mt-8 pt-1 bg-nlw-gradient self-stretch rounded-lg overflow-hidden">
         <div className="bg-[#2A2643] px-8 py-6 flex justify-between items-center">
           <div>
             <strong className="text-2xl text-white font-black block">
