@@ -19,6 +19,7 @@ import { THEME } from "../../theme";
 import { Heading } from "../../components/Header";
 import { DuoCard } from "../../components/DuoCard";
 import { Duo } from "../../interfaces/Duo";
+import { DuoMatch } from "../../components/DuoMatch";
 
 export function Game() {
   const route = useRoute();
@@ -26,6 +27,7 @@ export function Game() {
 
   const navigation = useNavigation();
   const [duos, setDuos] = useState<Duo[]>([]);
+  const [discordDuoSelected, setDiscordDuoSelected] = useState("");
 
   function handleGoBack() {
     navigation.goBack();
@@ -83,6 +85,8 @@ export function Game() {
               )}
             />
           </View>
+
+          <DuoMatch visible={} discord="#thyago608" />
         </ScrollView>
       </SafeAreaView>
     </Background>

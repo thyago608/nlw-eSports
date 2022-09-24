@@ -1,0 +1,30 @@
+.carousel .control-dots {
+  bottom: -8px;
+}
+
+.carousel .control-dots .dot.selected {
+  opacity: 1;
+  background: #8b5cf6;
+}
+
+.carousel .slider-wrapper.axis-horizontal .slider {
+  width: 50%;
+  gap: 1rem;
+  padding-left: 1rem;
+}
+
+@media (min-width: 640px) {
+  .carousel .slider-wrapper.axis-horizontal .slider {
+    width: 30%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .carousel .slider-wrapper.axis-horizontal .slider {
+    width: 15%;
+  }
+
+  .carousel .control-dots {
+    display: none;
+  }
+}

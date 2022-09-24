@@ -1,58 +1,128 @@
-import { FormEvent, useState } from "react";
+import { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as CheckBox from "@radix-ui/react-checkbox";
 import * as ToggleGroup from "@radix-ui/react-toggle-group";
-import { Check, GameController } from "phosphor-react";
+import { Check, GameController, Spinner } from "phosphor-react";
+import { api } from "../services/api";
 import { Input } from "./Form/Input";
 import { Game } from "../types/Game";
-import { api } from "../services/api";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { week } from "../utils/daysWeek";
+import { DayWeek } from "./Form/DayWeek";
 
 type CreateAdModalProps = {
   games: Pick<Game, "id" | "title">[];
+  onModalOpen: (open: boolean) => void;
+  open: boolean;
+  onSetGames: (games: Game[]) => void;
 };
 
-export function CreateAdModal({ games }: CreateAdModalProps) {
+interface FormInputs {
+  game: string;
+  name: string;
+  yearsPlaying: string;
+  discord: string;
+  hourStart: string;
+  hourEnd: string;
+}
+
+const formValidations = {
+  game: {
+    required: "O nome do jogo é obrigatório",
+  },
+  name: {
+    required: "O seu nome de usuário obrigatório",
+  },
+  yearsPlaying: {
+    required: "A quantidade de anos é obrigatório",
+  },
+  discord: {
+    required: "O seu discord é obrigatório",
+  },
+  hourStart: {
+    required: "O horário de ínicio é obrigatório",
+  },
+  hourEnd: {
+    required: "O horário de fim é obrigatório",
+  },
+};
+
+export function CreateAdModal({
+  games,
+  onModalOpen,
+  open,
+  onSetGames,
+}: CreateAdModalProps) {
   const [weekDays, setWeekDays] = useState<string[]>([]);
   const [hasVoiceChannel, setHasVoiceChannel] = useState(false);
+  const { register, handleSubmit, formState, reset } = useForm<FormInputs>();
+  const [loading, setLoading] = useState(false);
 
-  async function handleCreateAd(event: FormEvent) {
-    event.preventDefault();
-
-    const formData = new FormData(event.target as HTMLFormElement);
-    const data = Object.fromEntries(formData);
-
-    const ads = {
-      name: data.name,
+  const handleCreateAd: SubmitHandler<FormInputs> = async (data) => {
+    const dataFormatted = {
+      ...data,
       yearsPlaying: Number(data.yearsPlaying),
-      discord: data.discord,
       weekDays: weekDays.map(Number),
-      hourStart: data.hourStart,
-      hourEnd: data.hourEnd,
       useVoiceChannel: hasVoiceChannel,
     };
 
-    console.log(ads);
-  }
+    try {
+      const gameID = games.find((game) => game.title === data.game)?.id;
+
+      await api.post(`games/${gameID}/ads`, dataFormatted);
+
+      setLoading(true);
+
+      setTimeout(() => {
+        setLoading(false);
+        setWeekDays([]);
+        setHasVoiceChannel(false);
+        onModalOpen(false);
+
+        api.get<Game[]>("/games").then((response) => onSetGames(response.data));
+      }, 2000);
+    } catch {
+      console.log({
+        message: "Sorry, not possible connect to server",
+      });
+    }
+  };
+
+  useEffect(() => {
+    reset();
+    setHasVoiceChannel(false);
+    setWeekDays([]);
+  }, [open]);
 
   return (
     <Dialog.Portal>
-      <Dialog.Overlay className="bg-black/60 inset-0 fixed" />
-      <Dialog.Content className="fixed bg-[#2A2634] py-8 px-10 text-white top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-lg w-[480px] shadow-lg shadow-black/25">
-        <Dialog.Title className="text-3xl font-black">
+      <Dialog.Overlay className="bg-black/60 inset-0" />
+      <Dialog.Content className="h-[600px] md:w-[480px] fixed z-10 bg-[#2A2634] py-8 px-10 text-white top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-lg shadow-lg shadow-black/25 overflow-y-scroll scrollbar">
+        <Dialog.Title className="text-xl md:text-3xl font-black">
           Publique um anúncio
         </Dialog.Title>
-        <form className="mt-8 flex flex-col gap-4" onSubmit={handleCreateAd}>
+        <form
+          className="mt-8 flex flex-col gap-6"
+          onSubmit={handleSubmit(handleCreateAd)}
+        >
           <div className="flex flex-col gap-2">
-            <label htmlFor="game" className="font-semibold">
+            <label
+              htmlFor="game"
+              className="font-semibold text-sm md:text-base"
+            >
               Qual o game?
             </label>
             <select
               id="game"
-              name="game"
               defaultValue=""
-              className="bg-zinc-900 py-3 px-4 rounded text-sm appearance-none"
+              className={`bg-zinc-900 py-3 px-4 rounded text-sm appearance-none ${
+                !!formState.errors["game"]
+                  ? "border-x-2 border-y-2 border-violet-500"
+                  : ""
+              }`}
+              {...register("game", formValidations.game)}
             >
-              <option disabled value="">
+              <option disabled value="" className="text-sm">
                 Selecione o game que deseja jogar
               </option>
               {games.map((game) => (
@@ -62,120 +132,86 @@ export function CreateAdModal({ games }: CreateAdModalProps) {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label htmlFor="name">Seu nome(ou nickname)</label>
+            <label htmlFor="name" className="text-sm md:text-base">
+              Seu nome(ou nickname)
+            </label>
             <Input
-              name="name"
               id="name"
               placeholder="Como te chama dentro do jogo"
+              {...register("name", formValidations.name)}
+              error={formState.errors}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-6">
             <div className="flex flex-col gap-2">
-              <label htmlFor="yearsPlaying">Joga há quantos anos?</label>
+              <label htmlFor="yearsPlaying" className="text-sm md:text-base">
+                Joga há quantos anos?
+              </label>
               <Input
-                name="yearsPlaying"
                 id="yearsPlaying"
                 type="number"
                 placeholder="Tudo bem ser ZERO"
+                {...register("yearsPlaying", formValidations.yearsPlaying)}
+                error={formState.errors}
               />
             </div>
-            <div className="flex flex-col gap-2">
-              <label htmlFor="discord">Qual seu Discord?</label>
-              <Input name="discord" id="discord" placeholder="Usuário#0000" />
+            <div className="flex flex-col gap-2 justify-between">
+              <label htmlFor="discord" className="text-sm md:text-base">
+                Qual seu Discord?
+              </label>
+              <Input
+                id="discord"
+                placeholder="Usuário#0000"
+                {...register("discord", formValidations.discord)}
+                error={formState.errors}
+              />
             </div>
           </div>
 
           <div className="flex gap-6">
             <div className="flex flex-col gap-2">
-              <label htmlFor="weekDays">Quando costuma jogar?</label>
+              <label htmlFor="weekDays" className="text-sm md:text-base">
+                Quando costuma jogar?
+              </label>
               <ToggleGroup.Root
                 type="multiple"
                 className="grid grid-cols-4 gap-2"
                 value={weekDays}
                 onValueChange={setWeekDays}
               >
-                <ToggleGroup.Item
-                  value="0"
-                  title="Domingo"
-                  className={`w-8 h-8 rounded ${
-                    weekDays.includes("0") ? "bg-violet-500" : "bg-zinc-900"
-                  }`}
-                >
-                  D
-                </ToggleGroup.Item>
-                <ToggleGroup.Item
-                  value="1"
-                  title="Segunda"
-                  className={`w-8 h-8 rounded  ${
-                    weekDays.includes("1") ? "bg-violet-500" : "bg-zinc-900"
-                  }`}
-                >
-                  S
-                </ToggleGroup.Item>
-
-                <ToggleGroup.Item
-                  value="2"
-                  title="Terça"
-                  className={`w-8 h-8 rounded  ${
-                    weekDays.includes("2") ? "bg-violet-500" : "bg-zinc-900"
-                  }`}
-                >
-                  T
-                </ToggleGroup.Item>
-                <ToggleGroup.Item
-                  value="3"
-                  title="Quarta"
-                  className={`w-8 h-8 rounded  ${
-                    weekDays.includes("3") ? "bg-violet-500" : "bg-zinc-900"
-                  }`}
-                >
-                  Q
-                </ToggleGroup.Item>
-                <ToggleGroup.Item
-                  value="4"
-                  title="Quinta"
-                  className={`w-8 h-8 rounded  ${
-                    weekDays.includes("4") ? "bg-violet-500" : "bg-zinc-900"
-                  }`}
-                >
-                  Q
-                </ToggleGroup.Item>
-                <ToggleGroup.Item
-                  value="5"
-                  title="Sexta"
-                  className={`w-8 h-8 rounded  ${
-                    weekDays.includes("5") ? "bg-violet-500" : "bg-zinc-900"
-                  }`}
-                >
-                  S
-                </ToggleGroup.Item>
-                <ToggleGroup.Item
-                  value="6"
-                  title="Sábado"
-                  className={`w-8 h-8 rounded  ${
-                    weekDays.includes("6") ? "bg-violet-500" : "bg-zinc-900"
-                  }`}
-                >
-                  S
-                </ToggleGroup.Item>
+                {week.map((day) => (
+                  <DayWeek
+                    key={day.value}
+                    value={day.value}
+                    title={day.title}
+                    label={day.label}
+                    selected={weekDays.includes(day.value)}
+                  />
+                ))}
               </ToggleGroup.Root>
             </div>
 
             <div className="flex flex-col gap-6">
-              <label htmlFor="hourStart">Qual o horário do dia?</label>
+              <label htmlFor="hourStart" className="text-sm md:text-base">
+                Qual o horário do dia?
+              </label>
               <div className="grid grid-cols-2 gap-2">
                 <Input
-                  name="hourStart"
                   id="hourStart"
                   type="time"
                   placeholder="De"
+                  className="h-10"
+                  {...register("hourStart", formValidations.hourStart)}
+                  error={formState.errors}
                 />
                 <Input
-                  name="hourEnd"
                   id="hourEnd"
                   type="time"
                   placeholder="Até"
+                  className="h-10"
+                  {...register("hourEnd", formValidations.hourEnd)}
+                  error={formState.errors}
                 />
               </div>
             </div>
@@ -195,22 +231,31 @@ export function CreateAdModal({ games }: CreateAdModalProps) {
                 <Check className="w-4 h-4 text-emerald-400" />
               </CheckBox.Indicator>
             </CheckBox.Root>
-            Costumo me conectar ao chat de voz
+            <span className="text-[13px] md:text-base">
+              Costumo me conectar ao chat de voz
+            </span>
           </label>
 
           <footer className="mt-4 flex justify-end gap-4">
             <Dialog.Close
               type="button"
-              className="bg-zinc-500 px-5 h-12 rounded-md font-semibold hover:bg-zinc-600"
+              disabled={loading}
+              className="bg-zinc-500 px-5 h-12 rounded-md font-semibold   text-sm md:text-base disabled:opacity-20"
             >
               Cancelar
             </Dialog.Close>
             <button
               type="submit"
-              className="bg-violet-500 px-5 h-12 rounded-md font-semibold flex items-center gap-3 hover:bg-violet-600"
+              className="bg-violet-500 px-5 h-12 rounded-md font-semibold flex items-center gap-3 hover:bg-violet-600 text-sm md:text-base"
             >
-              <GameController size={24} />
-              Encontrar duo
+              {loading ? (
+                <Spinner className="animate-spin h-5 w-5" />
+              ) : (
+                <>
+                  <GameController size={24} />
+                  Encontrar duo
+                </>
+              )}
             </button>
           </footer>
         </form>
