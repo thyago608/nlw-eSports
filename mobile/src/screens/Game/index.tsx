@@ -20,6 +20,7 @@ import { Heading } from "../../components/Header";
 import { DuoCard } from "../../components/DuoCard";
 import { Duo } from "../../interfaces/Duo";
 import { DuoMatch } from "../../components/DuoMatch";
+import { useModalDuo } from "../../hooks/useModalDuo";
 
 export function Game() {
   const route = useRoute();
@@ -27,14 +28,14 @@ export function Game() {
 
   const navigation = useNavigation();
   const [duos, setDuos] = useState<Duo[]>([]);
-  const [discordDuoSelected, setDiscordDuoSelected] = useState("");
+  const { handleCloseModalDuo, handleOpenModalDuo, modalOpen } = useModalDuo();
 
   function handleGoBack() {
     navigation.goBack();
   }
 
   useEffect(() => {
-    fetch(`http://192.168.15.8:3333/games/${game.id}/ads`)
+    fetch(`http://192.168.15.12:3333/games/${game.id}/ads`)
       .then((response) => response.json())
       .then((data) => setDuos(data));
   }, []);
@@ -69,7 +70,7 @@ export function Game() {
               data={duos}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-                <DuoCard data={item} onConnect={() => {}} />
+                <DuoCard data={item} onConnect={handleOpenModalDuo} />
               )}
               horizontal={true}
               style={styles.containerList}
@@ -85,8 +86,11 @@ export function Game() {
               )}
             />
           </View>
-
-          <DuoMatch visible={} discord="#thyago608" />
+          <DuoMatch
+            onRequestClose={handleCloseModalDuo}
+            visible={modalOpen}
+            discord="#thyago608"
+          />
         </ScrollView>
       </SafeAreaView>
     </Background>

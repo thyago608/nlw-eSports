@@ -8,6 +8,7 @@ import {
   Inter_900Black,
 } from "@expo-google-fonts/inter";
 import { Loading } from "./src/components/Loading";
+import { ModalDuoProvider } from "./src/context/ModalContext";
 import { Routes } from "./src/routes";
 
 export default function App() {
@@ -19,13 +20,15 @@ export default function App() {
   });
 
   return (
-    <Background>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="transparent"
-        translucent
-      />
-      {fontsLoaded ? <Routes /> : <Loading />}
-    </Background>
+    <ModalDuoProvider>
+      <Background>
+        <StatusBar
+          barStyle="light-content"
+          backgroundColor="transparent"
+          translucent
+        />
+        {fontsLoaded ? <Routes /> : <Loading />}
+      </Background>
+    </ModalDuoProvider>
   );
 }

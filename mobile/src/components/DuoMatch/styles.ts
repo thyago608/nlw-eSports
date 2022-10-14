@@ -12,14 +12,44 @@ export const styles = StyleSheet.create({
   content: {
     width: 311,
     backgroundColor: THEME.COLORS.SHAPE,
+    paddingBottom: 45,
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
   },
-  discord: {
-    color: THEME.COLORS.TEXT,
+  button: {
+    marginTop: 30,
+    width: 150,
+    height: 36,
+    borderRadius: 3,
+    backgroundColor: THEME.COLORS.PRIMARY,
+
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  containerDiscord: {
+    marginVertical: 15,
+    alignItems: "center",
+  },
+  discordDuo: {
+    color: THEME.COLORS.CAPTION_400,
     fontSize: THEME.FONT_SIZE.MD,
-    fontFamily: THEME.FONT_FAMILY.REGULAR,
+    borderBottomWidth: 1,
+    borderColor: THEME.COLORS.PRIMARY,
+
+    width: 150,
+    height: 40,
+  },
+  myDiscord: {
+    color: THEME.COLORS.CAPTION_400,
+    fontSize: 16,
+  },
+  text: {
+    color: THEME.COLORS.TEXT,
+    fontSize: 18,
+    fontFamily: THEME.FONT_FAMILY.BOLD,
   },
   closeIcon: {
     alignSelf: "flex-end",
